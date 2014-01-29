@@ -10,7 +10,7 @@
 #  2) DO NOT REMOVE OR MODIFY THE FOLLOWING NOTICE.
 #
     MAKESTATS := $(info MakeStats (C) 2014 Triston J. Taylor All Rights Reserved.) \
-	$(info                                                                       )
+    $(info                                                                       )
 #
 # ==================================================================================
 #
