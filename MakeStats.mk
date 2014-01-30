@@ -96,7 +96,7 @@ push-minor:
 	@echo
 
 code-name:
-	@$(shell read -ep "Enter product or code name: " NAME; echo \
+	@$(shell read -ep "Enter product or code name: " NAME; echo -n \
 		$(BUILD_MAJOR) $(BUILD_MINOR) $(BUILD_REVISION) $(BUILD_NUMBER)  \
 		$(BUILD_DATE) $(USER) $$NAME > make.sts; \
 	)
