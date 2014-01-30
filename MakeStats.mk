@@ -41,7 +41,7 @@
 #
 # Which will automatically increment your build revision number.
 #
-# To increment the minor buld version, from the command line you shall issue:
+# To increment the minor build version, from the command line you shall issue:
 #
 # make push-minor;
 #
