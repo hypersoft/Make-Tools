@@ -28,6 +28,10 @@
 #    Please indicate "MakeStats" as your purpose and provide ANY contact address.
 # ==================================================================================
 
+# Usage
+
+# To use this file properly, you must include the file at the end
+# of your make script, or at least after the default rule.
 
 INIT_STATS != if ! test -e make.sts; then \
 	echo Creating build statistics database ... >&2; \
@@ -47,7 +51,7 @@ THIS_BUILD_REVISION != expr $(BUILD_REVISION) + 1
 THIS_BUILD_NUMBER != expr $(BUILD_NUMBER) + 1
 THIS_BUILD_DATE != date +%s
 
-UPDATE_STATS = echo -n \
+push-stats = echo -n \
 $(BUILD_MAJOR) $(BUILD_MINOR) $(THIS_BUILD_REVISION) $(THIS_BUILD_NUMBER)  \
 $(THIS_BUILD_DATE) $(USER) $(BUILD_NAME) > make.sts;
 
@@ -57,7 +61,7 @@ push-major: THIS_BUILD_REVISION = 0
 push-major: THIS_BUILD_NUMBER = $(BUILD_NUMBER)
 push-major: THIS_BUILD_DATE = $(BUILD_DATE)
 push-major:
-	@$(UPDATE_STATS)
+	@$(push-stats)
 	@echo
 
 push-minor: BUILD_MINOR = $(shell expr $(BUILD_MINOR) + 1)
@@ -65,7 +69,7 @@ push-minor: THIS_BUILD_REVISION = 0
 push-minor: THIS_BUILD_NUMBER = $(BUILD_NUMBER)
 push-minor: THIS_BUILD_DATE = $(BUILD_DATE)
 push-minor:
-	@$(UPDATE_STATS)
+	@$(push-stats)
 	@echo
 
 code-name: THIS_BUILD_NUMBER = $(BUILD_NUMBER)
@@ -76,9 +80,8 @@ code-name:
 		$(BUILD_MAJOR) $(BUILD_MINOR) $(THIS_BUILD_REVISION) $(THIS_BUILD_NUMBER)  \
 		$(THIS_BUILD_DATE) $(USER) $$NAME > make.sts; \
 	)
-	@echo
 
-info:
+stats:
 	@echo Build Developer: $(BUILD_USER)
 	@echo '  'Build Version: $(BUILD_MAJOR).$(BUILD_MINOR).$(BUILD_REVISION)
 	@echo '   'Build Number: $(BUILD_NUMBER)
