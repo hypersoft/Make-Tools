@@ -29,11 +29,39 @@
 # ==================================================================================
 
 # Usage
-
+#
 # To use this file properly, you must include the file at the end
 # of your make script, or at least after the default rule.
+#
+# After you have succesfully built your rule, you shall issue a statement of the form:
+#
+# rule:
+#	...
+#	@$(push-stats)
+#
+# Which will automatically increment your build revision number.
+#
+# To increment the minor buld version, from the command line you shall issue:
+#
+# make push-minor;
+#
+# Which will handle the versioning for you.
+#
+# Likewise to increment the major build version, from the command line:
+#
+# make push-major
+#
+# To change the product, project, or code name:
+#
+# make code-name;
+#
+# To review your project make stats:
+#
+# make stats;
+#
+# =================================================================================
 
-INIT_STATS != if ! test -e make.sts; then \
+MAKESTATS != if ! test -e make.sts; then \
 	echo Creating build statistics database ... >&2; \
 	echo 0 0 0 0 `date +%s` $(USER) `basename $(shell pwd)` > make.sts; \
 fi;
