@@ -9,8 +9,18 @@
 #  1) DO NOT REMOVE OR MODIFY THE PRECEDING NOTICE.
 #  2) DO NOT REMOVE OR MODIFY THE FOLLOWING NOTICE.
 #
-    MAKESTATS := $(info MakeStats (C) 2014 Triston J. Taylor All Rights Reserved.) \
-    $(info                                                                       )
+
+ifneq (FALSE, $(NOTICE))
+NOTICE := $(shell { \
+	printf 'Makestats: \n\n'; \
+	printf '\t%s\n' \
+		'(C) 2014 Hypersoft Systems All Rights Reserved.' \
+		'(C) 2014 Triston J. Taylor <pc.wiz.tt@gmail.com>' \
+	; \
+	echo; \
+} >&2)
+endif
+
 #
 # ==================================================================================
 #
@@ -53,7 +63,7 @@
 #
 # To change the product, project, or code name:
 #
-# make code-name;
+# make build-name;
 #
 # To review your project make stats:
 #
@@ -95,7 +105,7 @@ push-minor:
 	$(THIS_BUILD_DATE) $(USER) $(BUILD_NAME) > make.sts;
 	@echo
 
-code-name:
+build-name:
 	@$(shell read -ep "Enter product or code name: " NAME; echo -n \
 		$(BUILD_MAJOR) $(BUILD_MINOR) $(BUILD_REVISION) $(BUILD_NUMBER)  \
 		$(BUILD_DATE) $(USER) $$NAME > make.sts; \
