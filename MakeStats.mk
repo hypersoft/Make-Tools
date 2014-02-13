@@ -93,6 +93,14 @@ push-stats = echo -n \
 $(BUILD_MAJOR) $(BUILD_MINOR) $(THIS_BUILD_REVISION) $(THIS_BUILD_NUMBER)  \
 $(THIS_BUILD_DATE) $(USER) $(BUILD_NAME) > make.sts;
 
+stats:
+	@echo Build Developer: $(BUILD_USER)
+	@echo '  'Build Version: $(BUILD_MAJOR).$(BUILD_MINOR).$(BUILD_REVISION)
+	@echo '   'Build Number: $(BUILD_NUMBER)
+	@echo '     'Build Date: `date --date=@$(BUILD_DATE)`
+	@echo '     'Build Name: $(BUILD_NAME)
+	@echo
+
 push-major:
 	@echo -n \
 	$(shell expr $(BUILD_MINOR) + 1) 0 0 $(BUILD_NUMBER)  \
@@ -110,12 +118,4 @@ build-name:
 		$(BUILD_MAJOR) $(BUILD_MINOR) $(BUILD_REVISION) $(BUILD_NUMBER)  \
 		$(BUILD_DATE) $(USER) $$NAME > make.sts; \
 	)
-
-stats:
-	@echo Build Developer: $(BUILD_USER)
-	@echo '  'Build Version: $(BUILD_MAJOR).$(BUILD_MINOR).$(BUILD_REVISION)
-	@echo '   'Build Number: $(BUILD_NUMBER)
-	@echo '     'Build Date: `date --date=@$(BUILD_DATE)`
-	@echo '     'Build Name: $(BUILD_NAME)
-	@echo
 
