@@ -129,12 +129,13 @@ build-name:
 		$(BUILD_DATE) $(USER) $$NAME > $(BUILD_STATS); \
 	)
 
-push-build: BUILD_NUMBER != expr $(BUILD_NUMBER) + 1
-push-build: $(BUILD_STATS)
-	@$(BUILD_DUMP_STATS);
 
 $(BUILD_STATS): BUILD_REVISION != expr $(BUILD_REVISION) + 1
 $(BUILD_STATS): BUILD_DATE != date +%s
 $(BUILD_STATS): $(BUILD_VERSION_SOURCES)
 	@$(BUILD_DUMP_STATS)
+
+push-build: BUILD_NUMBER != expr $(BUILD_NUMBER) + 1
+push-build: $(BUILD_STATS)
+	@(set -- `cat $(BUILD_STATS)`; echo $${@:1:3} `expr $$4 + 1` $${@:5} > $(BUILD_STATS));
 
