@@ -86,24 +86,36 @@ endif
 
 BUILD_STATS ?= project.ver
 
+ifeq (, $(BUILD_STATS))
+    void != $(error MakeStats Database name is zero-length)
+endif
+
+ifeq (TRUE, $(shell test -d $(BUILD_STATS) && echo TRUE))
+    void != $(error MakeStats Database name is a directory)
+endif
+
 ifndef BUILD_VERSION_SOURCES
     void != $(error You must define your BUILD_VERSION_SOURCES)
 endif
 
-MAKESTATS != if ! test -e $(BUILD_STATS); then \
+void != if ! test -e $(BUILD_STATS); then \
 	printf "%s\n\n" "Creating build statistics database ..." >&2; \
 	echo 0 0 0 0 `date +%s` $(USER) `basename $(shell pwd)` > $(BUILD_STATS); \
 	touch -mc $(BUILD_VERSION_SOURCES); \
 fi;
 
-MAKESTATS != cat $(BUILD_STATS) 2>&- || true
+ifeq (1, $(shell expr `wc -w $(BUILD_STATS) | cut -d ' ' -f1` "<" 7))
+    void != $(error Unrecognized MakeStats Database format: $(BUILD_STATS))
+endif
+
+MAKESTATS != cat $(BUILD_STATS)
 
 BUILD_MAJOR = $(word 1, $(MAKESTATS))
 BUILD_MINOR = $(word 2, $(MAKESTATS))
 BUILD_REVISION != expr $(word 3, $(MAKESTATS)) + 1
 BUILD_NUMBER != expr $(word 4, $(MAKESTATS)) + 1
 BUILD_DATE != date +%s
-BUILD_USER  = $(USER)
+BUILD_USER  ?= $(USER)
 BUILD_NAME = $(wordlist 7, $(words $(MAKESTATS)), $(MAKESTATS))
 BUILD_TRIPLET = $(BUILD_MAJOR).$(BUILD_MINOR).$(BUILD_REVISION)
 
@@ -139,7 +151,7 @@ push-build: push-version
 
 # Update revision, date, and user if sources are newer than stats
 $(BUILD_STATS): $(BUILD_VERSION_SOURCES)
-	@sh -c 'echo $$1 $$2 $(BUILD_REVISION) $$4 $(BUILD_DATE) $(USER) $${@:7} > $(BUILD_STATS);' -- `cat $(BUILD_STATS)`
+	@sh -c 'echo $$1 $$2 $(BUILD_REVISION) $$4 $(BUILD_DATE) $(BUILD_USER) $${@:7} > $(BUILD_STATS);' -- `cat $(BUILD_STATS)`
 
 # These targets will build regardless of existing files
 .PHONY: stats build-name push-major push-minor push-version push-build
