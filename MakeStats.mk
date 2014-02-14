@@ -79,6 +79,7 @@ BUILD_STATS = project.ver
 MAKESTATS != if ! test -e $(BUILD_STATS); then \
 	printf "%s\n\n" "Creating build statistics database ..." >&2; \
 	echo 0 0 1 1 `date +%s` $(USER) `basename $(shell pwd)` > $(BUILD_STATS); \
+	touch $(BUILD_VERSION_SOURCES); \
 fi;
 
 BUILD_DUMP_STATS = echo $(BUILD_MAJOR) $(BUILD_MINOR) $(BUILD_REVISION) \
@@ -95,6 +96,8 @@ BUILD_USER  = $(word 6, $(MAKESTATS))
 BUILD_NAME = $(wordlist 7, $(words $(MAKESTATS)), $(MAKESTATS))
 BUILD_TRIPLET = $(BUILD_MAJOR).$(BUILD_MINOR).$(BUILD_REVISION)
 
+stats: BUILD_REVISION != expr $(BUILD_REVISION) - 1
+stats: BUILD_NUMBER != expr $(BUILD_NUMBER) - 1
 stats:
 	@echo Build Developer: $(BUILD_USER)
 	@echo '  'Build Version: $(BUILD_MAJOR).$(BUILD_MINOR).$(BUILD_REVISION)
