@@ -38,7 +38,7 @@ endif
 #    Please indicate "MakeStats" as your purpose and provide ANY contact address.
 # ==================================================================================
 
-# Usage
+# Usage ========================================================================
 #
 # To use this file properly, you must include the file at the end
 # of your make script, or at least after the default rule.
@@ -48,22 +48,29 @@ endif
 # Populate this variable with all sources that will cause version to change
 # when modified.
 #
-# To trigger update of stats, use push-build as a final prerequisite:
-#
-# my_program.o: some.c some.h push-build
-#
-# Which will automatically increment your build number, and if ANY
-# BUILD_VERSION_SOURCES are new, will also update build revision, user and date.
+# ==============================================================================
+# Do this BEFORE compiling, archiving, and linking your "main object".
+# ...
+# @$(make-build-number)
+# ...
+# To increment the build number. 
+# ==============================================================================
+# Do this AFTER SUCCESSFUL compile of your "main object".
+# ...
+# @$(make-build-revision)
+# ...
+# To increment the build revision. 
+# ==============================================================================
 #
 # To increment the minor build version, from the command line you shall issue:
 #
-# make push-minor;
+# make build-minor;
 #
 # Which will handle the versioning for you.
 #
 # Likewise to increment the major build version, from the command line:
 #
-# make push-major;
+# make build-major;
 #
 # To change the product, project, or code name:
 #
@@ -75,7 +82,7 @@ endif
 #
 # =================================================================================
 #
-# Finally, DO NOT MIX TARGETS with: push-major, push-minor or build-name
+# Finally, DO NOT MIX TARGETS with: build-major, build-minor or build-name
 # While you can do this, it will not produce the obvious result, due to the
 # way GNU Make and alike expand variables at make file initialization.
 #
@@ -109,6 +116,7 @@ ifeq (, $(BUILD_VERSION_SOURCES))
 endif
 
 BUILD_VERSION_SOURCE_CHECK := $(foreach file,$(BUILD_SOURCES),$(shell test -e $(file) || echo $(file)))
+BUILD_VERSION_UPDATE_CHECK := $(foreach file,$(BUILD_SOURCES),$(shell test $(file) -n $(BUILD_STATS) && echo $(file)))
 
 ifneq (, $(BUILD_VERSION_SOURCE_CHECK))
     void != $(error Could not find file $(word 1, $(BUILD_VERSION_SOURCE_CHECK)) specified by BUILD_VERSION_SOURCES)
@@ -116,7 +124,7 @@ endif
 
 void != if ! test -e $(BUILD_STATS); then \
 	printf "%s\n\n" "Creating build statistics database ..." >&2; \
-	echo 0 0 0 0 `date +%s` $(USER) `basename $(shell pwd)` > $(BUILD_STATS); \
+	echo 0 0 0 0 `date +%s` $(USER) "`basename $(shell pwd)`" > $(BUILD_STATS); \
 	touch -mc $(BUILD_VERSION_SOURCES); \
 fi;
 
@@ -135,7 +143,25 @@ BUILD_USER  ?= $(USER)
 BUILD_NAME = $(wordlist 7, $(words $(MAKESTATS)), $(MAKESTATS))
 BUILD_TRIPLET = $(BUILD_MAJOR).$(BUILD_MINOR).$(BUILD_REVISION)
 
-stats:
+BUILD_UPDATES:=$(strip $(foreach file,$(BUILD_VERSION_SOURCES),$(shell test $(file) -nt $(BUILD_STATS) && echo $(file))))
+
+# Update revision, date, and user if sources are newer than stats
+make-build-revision = \
+sh -c ' \
+    if [ -n "$(BUILD_UPDATES)" ] && [ "$(BUILD_REVISION)" != "$$3" ]; then \
+	echo $$1 $$2 $(BUILD_REVISION) $(BUILD_NUMBER) $(BUILD_DATE) "$(BUILD_USER)" "$${@:7}" > $(BUILD_STATS); \
+    fi; echo -n;' -- \
+`cat $(BUILD_STATS)`
+
+# Update build number if they don't match
+make-build-number = \
+sh -c ' \
+    if [ "$(BUILD_NUMBER)" != "$$4" ]; then \
+	echo $${@:1:3} $(BUILD_NUMBER) "$${@:5}" > $(BUILD_STATS); \
+    fi; echo -n;' -- \
+`cat $(BUILD_STATS)`
+
+build-stats:
 	@(  \
 	    set -- `cat $(BUILD_STATS)`; \
 	    printf "%s\n" \
@@ -147,27 +173,15 @@ stats:
 	);
 	@echo
 
-# Update build major, clearing build minor and build revision
-push-major:
-	@sh -c 'echo `expr $$1 + 1` 0 0 $${@:4} > $(BUILD_STATS);' -- `cat $(BUILD_STATS)`
-
-# Update build minor, clearing build revision
-push-minor:
-	@sh -c 'echo $$1 `expr $$2 + 1` 0 $${@:4} > $(BUILD_STATS);' -- `cat $(BUILD_STATS)`
-
 # Update build name
 build-name:
 	@sh -c 'echo $${@:1:6} `read -ep "Enter product or code name: " NAME; echo $$NAME` > $(BUILD_STATS);' -- `cat $(BUILD_STATS)`
 
-push-version: $(BUILD_STATS)
+# Update build major, clearing build minor and build revision
+build-major:
+	@sh -c 'echo `expr $$1 + 1` 0 0 "$${@:4}" > $(BUILD_STATS);' -- `cat $(BUILD_STATS)`
 
-# Update build number; possibly revision, date, and user
-push-build: push-version
-	@sh -c 'echo $${@:1:3} $(BUILD_NUMBER) $${@:5} > $(BUILD_STATS);' -- `cat $(BUILD_STATS)`
+# Update build minor, clearing build revision
+build-minor:
+	@sh -c 'echo $$1 `expr $$2 + 1` 0 "$${@:4}" > $(BUILD_STATS);' -- `cat $(BUILD_STATS)`
 
-# Update revision, date, and user if sources are newer than stats
-$(BUILD_STATS): $(BUILD_VERSION_SOURCES)
-	@sh -c 'echo $$1 $$2 $(BUILD_REVISION) $$4 $(BUILD_DATE) "$(BUILD_USER)" $${@:7} > $(BUILD_STATS);' -- `cat $(BUILD_STATS)`
-
-# These targets will build regardless of existing files
-.PHONY: stats build-name push-major push-minor push-version push-build
