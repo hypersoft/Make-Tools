@@ -105,6 +105,32 @@ endif
 # You can set this variable in YOUR makefile/command-line if need be.
 BUILD_STATS ?= project.ver
 
+ifeq (TRUE, $(BUILD_STATS_AUTO_COMMIT))
+
+    BUILD_STATS_AUTO_COMMIT=
+
+    BUILD_STATS_COMMIT_MESSAGE = \
+    "$(BUILD_NAME) Version $(BUILD_TRIPLET); Build Number $(BUILD_NUMBER)"
+
+    # IF the stats file exists in a git repository....
+    BUILD_STATS_COMMIT_GIT != git ls-files --error-unmatch $(BUILD_STATS) \
+    >&- 2>&- && echo TRUE
+
+    # Setup for a git repository
+    ifeq (TRUE,$(BUILD_STATS_COMMIT_GIT))
+	BUILD_STATS_AUTO_COMMIT += \
+	    git commit $(BUILD_STATS) -m $(BUILD_STATS_COMMIT_MESSAGE) >&- 2>&-;
+    endif
+
+    # Do as above for other repos. Each shell statement must be WELL TERMINATED
+
+    # Nobody told me how to execute this directive...
+    ifeq (,$(BUILD_STATS_AUTO_COMMIT))
+	void := $(info No command to commit MakeStats changes found)
+    endif
+
+endif
+
 ifeq (, $(BUILD_STATS))
     void != $(error MakeStats Database name is zero-length)
 endif
@@ -163,6 +189,7 @@ sh -c ' \
     if [ -n "$(BUILD_UPDATES)" ] && [ "$(BUILD_REVISION)" != "$$3" ]; then \
 	echo $$1 $$2 $(BUILD_REVISION) $(BUILD_NUMBER) $(BUILD_DATE) \
 	    "$(BUILD_USER)" "$${@:7}" > $(BUILD_STATS); \
+	$(BUILD_STATS_AUTO_COMMIT) \
     fi; echo -n;' -- \
 `cat $(BUILD_STATS)`
 
@@ -171,6 +198,7 @@ make-build-number = \
 sh -c ' \
     if [ "$(BUILD_NUMBER)" != "$$4" ]; then \
 	echo $${@:1:3} $(BUILD_NUMBER) "$${@:5}" > $(BUILD_STATS); \
+	$(BUILD_STATS_AUTO_COMMIT) \
     fi; echo -n;' -- \
 `cat $(BUILD_STATS)`
 
@@ -200,4 +228,6 @@ build-major:
 build-minor:
 	@sh -c 'echo $$1 `expr $$2 + 1` 0 "$${@:4}" > $(BUILD_STATS);' -- \
 	    `cat $(BUILD_STATS)`
+
+.PHONY: build-stats build-name build-major build-minor
 
