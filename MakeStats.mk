@@ -109,8 +109,17 @@ ifeq (TRUE, $(BUILD_STATS_AUTO_COMMIT))
 
     BUILD_STATS_AUTO_COMMIT=
 
-    BUILD_STATS_COMMIT_MESSAGE = \
-    "$(BUILD_NAME) Version $(BUILD_TRIPLET); Build Number $(BUILD_NUMBER)"
+    BUILD_STATS_COMMIT_MESSAGE = "` \
+    echo "$(BUILD_NAME) Version $(BUILD_TRIPLET); Build $(BUILD_NUMBER)"; \
+    echo; \
+    [ -n "$(BUILD_UPDATES)" ] && \
+        printf "%s\n\n" "Targeting: $(BUILD_UPDATES)"; \
+    printf "%s\n" \
+        "Build Developer: $(BUILD_USER)" \
+        "  Build Version: $(BUILD_TRIPLET)" \
+        "   Build Number: $(BUILD_NUMBER)" \
+        "     Build Date: $$(date --date=@$(BUILD_DATE))" \
+    `"
 
     # IF the stats file exists in a git repository....
     BUILD_STATS_COMMIT_GIT != git ls-files --error-unmatch $(BUILD_STATS) \
